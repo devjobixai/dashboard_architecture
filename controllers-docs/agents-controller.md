@@ -2,393 +2,513 @@
 
 ## Overview
 
-AgentsController manages AI agents in the Jobix Dashboard admin panel. It covers creating, editing, copying, deleting agents, knowledge management, widget configuration, and phone numbers.
+AgentsController manages AI agents in the Jobix Dashboard administrative panel. This is one of the most complex controllers, including creation, editing, copying, deletion of agents, knowledge management, widget configuration, and phone number management.
 
-Base path: `/agents`  
-Controller type: WebController (Admin Application)  
-Namespace: `apps\\admin\\controllers\\AgentsController`
-
----
-
-### 3. Save Chat Widget Settings
-
-| Param | Value |
-|------|-------|
-| URL | `/agents/save-chat-widget-settings?uuid={agent_uuid}` |
-| Method | POST |
-| Description | Save chat widget settings for an agent |
-
-URL Parameters:
-- `uuid` (string) — agent UUID
-
-Input (SaveChatWidgetForm bodyParams):
-- See SaveChatWidgetForm for fields
-
-Business logic:
-- Same as call widget, but for chat settings
-
-Responses:
-- Success: Redirect to `/agents/profile?uuid={uuid}&showTab=embed-tab&showSubTab=chat-widget`
-- Error: Redirect with error notification
+**Base Path:** `/agents`  
+**Controller Type:** WebController (Admin Application)  
+**Namespace:** `apps\admin\controllers\AgentsController`
 
 ---
 
-### 4. Create — Create a New Agent
+## Endpoints
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/create` |
-| Methods | GET, POST, AJAX |
-| Description | Create a new AI agent |
+### 1. Index - Agents List
+
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/index` |
+| **Method** | GET |
+| **Description** | Display list of all company AI agents with search functionality |
+
+**Input Data:**
+- Query parameters for search (through AgentsSearch)
+
+**Business Logic:**
+1. Create AgentsSearch model
+2. Load search parameters from query string
+3. Execute search and create DataProvider
+
+**Response:**
+- **Success:** HTML view with agents list and search form
+- **Data:** `pageName`, `dataProvider`, `searchModel`
+
+---
+
+### 2. Save Call Widget Settings - Call Widget Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/save-call-widget-settings?uuid={agent_uuid}` |
+| **Method** | POST |
+| **Description** | Save call widget settings for an agent |
+
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
+
+**Input Data (SaveCallWidgetForm bodyParams):**
+- Field details require SaveCallWidgetForm analysis
+
+**Business Logic:**
+1. Create SaveCallWidgetForm with agent UUID
+2. Load data from bodyParams
+3. Save widget settings
+4. Show notification about result
+
+**Responses:**
+- **Success:** Redirect to `/agents/profile?uuid={uuid}&showTab=embed-tab&showSubTab=call-widget`
+- **Error:** Redirect with error notification
+
+---
+
+### 3. Save Chat Widget Settings - Chat Widget Configuration
+
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/save-chat-widget-settings?uuid={agent_uuid}` |
+| **Method** | POST |
+| **Description** | Save chat widget settings for an agent |
+
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
+
+**Input Data (SaveChatWidgetForm bodyParams):**
+- Field details require SaveChatWidgetForm analysis
+
+**Business Logic:**
+- Similar to call widget, but for chat settings
+
+**Responses:**
+- **Success:** Redirect to `/agents/profile?uuid={uuid}&showTab=embed-tab&showSubTab=chat-widget`
+- **Error:** Redirect with error notification
+
+---
+
+### 4. Create - New Agent Creation
+
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/create` |
+| **Methods** | GET, POST, AJAX |
+| **Description** | Create new AI agent |
 
 #### GET `/agents/create`
-Purpose: Render the agent creation form
+**Purpose:** Display agent creation form
 
 #### AJAX Validation
-Purpose: Real-time form validation
+**Purpose:** Real-time form validation
 
-Response Format: JSON with validation results
+**Response Format:** JSON with validation results
 
 #### POST `/agents/create`
-Purpose: Handle agent creation
+**Purpose:** Handle agent creation
 
-Input (SaveAgentForm):
+**Input Data (SaveAgentForm):**
 
 | Field | Type | Required | Description |
-|------|------|----------|-------------|
+|-------|------|----------|-------------|
 | `avatar` | file | ✗ | Agent avatar file |
-| + others | mixed | varies | Depends on scenario |
+| + other fields | mixed | varies | Depends on scenario |
 
-Creation business logic:
+**Creation Business Logic:**
 1. Instantiate SaveAgentForm with scenario = SCENARIO_CREATE
 2. AJAX validation (if AJAX request)
 3. Upload avatar via UploadedFile
 4. Call `model->create()`
 5. Show notifications and redirect
 
-Responses:
-- AJAX: JSON validation results
-- Success: Redirect to `/agents/profile/{new_agent_uuid}`
-- Error: HTML view with form and errors
-- GET: HTML view with empty form
+**Responses:**
+- **AJAX:** JSON validation results
+- **Success:** Redirect to `/agents/profile/{new_agent_uuid}`
+- **Error:** HTML view with form and errors
+- **GET:** HTML view with empty form
 
 ---
 
-### 5. Copy — Copy an Agent
+### 5. Copy - Agent Copying
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/copy?uuid={agent_uuid}` |
-| Method | GET |
-| Description | Create a copy of an existing agent |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/copy?uuid={agent_uuid}` |
+| **Method** | GET |
+| **Description** | Create a copy of existing agent |
 
-URL Parameters:
-- `uuid` (string) — agent UUID to copy
+**URL Parameters:**
+- `uuid` (string) - Agent UUID to copy
 
-Input (CopyAgentForm):
+**Input Data (CopyAgentForm):**
 - UUID via GET parameter
 
-Business logic:
+**Business Logic:**
 1. Create CopyAgentForm with UUID
 2. Call `copy()`
-3. Create a new agent copy
+3. Create new agent copy
 4. Show result via notifications
 
-Responses:
-- Success: Redirect to `/agents/profile/{new_agent_uuid}` with success notification
-- Error: Redirect to referrer with error notification
+**Responses:**
+- **Success:** Redirect to `/agents/profile/{new_agent_uuid}` with success notification
+- **Error:** Redirect to referrer with error notification
 
 ---
 
-### 6. Profile — Agent Profile (Edit)
+### 6. Profile - Agent Profile (Edit)
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/profile?uuid={agent_uuid}` |
-| Methods | GET, POST, AJAX |
-| Description | View and edit agent profile |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/profile?uuid={agent_uuid}` |
+| **Methods** | GET, POST, AJAX |
+| **Description** | View and edit agent profile |
 
-URL Parameters:
-- `uuid` (string) — agent UUID
-- `scenario` (string, optional) — edit scenario
-- `layout` (string, optional) — "node" for special rendering
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
+
+**Query Parameters:**
+- `showTab` (string, optional) - Tab to display (general, knowledge, embed-tab, etc.)
+- `showSubTab` (string, optional) - Sub-tab to display within main tab
 
 #### GET `/agents/profile`
-Purpose: Render the edit form
+**Purpose:** Display agent profile with tabs
 
-Special Features:
-- Node Layout Detection: Automatically sets layout="node" for special rendering
-- Data Population: Automatically loads agent data into the form
+**Behavior:**
+- Automatic data loading through SaveAgentForm populate()
+- Tab management for different agent configuration sections
+- Sub-tab support for detailed configurations
 
 #### AJAX Validation
-Response Format: JSON with validation results
+**Purpose:** Real-time form validation for profile updates
+
+**Response Format:** JSON with validation results
 
 #### POST `/agents/profile`
-Purpose: Handle agent update
+**Purpose:** Handle agent profile updates
 
-Scenarios (SaveAgentForm):
+**Input Data (SaveAgentForm bodyParams):**
+- Fields depend on scenario (UPDATE)
+- Avatar file upload support
+- Various agent configuration parameters
 
-| Scenario | Method | Description | Show Tab |
-|----------|--------|-------------|----------|
-| `SCENARIO_GENERAL` | `saveGeneral()` | General info + avatar upload | behavior-tab |
-| `SCENARIO_DETAILS` | `saveDetails()` | Agent details | behavior-tab |
-| `SCENARIO_DESCRIPTION` | `saveDescription()` | Agent description | behavior-tab |
-| `SCENARIO_PROMPTS` | `savePrompt()` | AI prompts | behavior-tab |
-| `SCENARIO_GREETING` | `saveGreeting()` | Agent greeting | behavior-tab |
-| `SCENARIO_PRESET` | `savePreset()` | Agent presets | behavior-tab |
-| `SCENARIO_DYNAMIC_PARAMS` | `saveDynamicParam()` | Dynamic parameters | dynamic-params-tab |
-| `SCENARIO_KNOWLEDGE_TEXT` | `saveKnowledgeText()` | Text knowledge | knowledge-tab |
+**Update Business Logic:**
+1. Load existing agent data
+2. Validate submitted changes
+3. Handle avatar upload if provided
+4. Call `model->update()`
+5. Show notifications and maintain current tab/sub-tab state
 
-Node Layout Support:
-- Supports a special layout for node-based UI
-- Passes the layout parameter in redirect URLs
-
-Responses:
-- AJAX: JSON validation results
-- Success: Redirect to `/agents/profile?uuid={uuid}&showTab={appropriate_tab}`
-- Error: HTML view with form and errors
-- GET: HTML view with populated form
+**Responses:**
+- **AJAX:** JSON validation results
+- **Success:** HTML view with updated profile and success notification
+- **Error:** HTML view with form and validation errors
+- **GET:** HTML view with populated agent profile form
 
 ---
 
-### 7. Delete — Remove an Agent
+### 7. Delete - Agent Deletion
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/delete?uuid={agent_uuid}` |
-| Method | GET |
-| Description | Delete an agent |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/delete?uuid={agent_uuid}` |
+| **Method** | POST |
+| **Description** | Delete an agent |
 
-URL Parameters:
-- `uuid` (string) — agent UUID to delete
+**URL Parameters:**
+- `uuid` (string) - Agent UUID for deletion
 
-Input:
-- UUID via GET parameter
+**Business Logic:**
+1. Create SaveAgentForm with SCENARIO_DELETE
+2. Set agent UUID
+3. Call form delete() method
+4. Handle associated data cleanup
+5. Show notification about result
 
-Business logic:
-1. Instantiate SaveAgentForm with UUID
-2. Call `delete()`
-3. Show notification with the result
-
-Responses:
-- Always: Redirect to `/agents/index` with a notification
-
----
-
-### 8. Upload Knowledge Files
-
-| Param | Value |
-|------|-------|
-| URL | `/agents/upload-knowledge-files?uuid={agent_uuid}` |
-| Method | POST |
-| Description | Upload files to the agent's knowledge base |
-
-URL Parameters:
-- `uuid` (string) — agent UUID
-
-Input:
-- `file` — file via `UploadedFile::getInstanceByName('file')`
-
-Business logic:
-1. Receive file via UploadedFile
-2. Call `uploadKnowledgeFile()` on SaveAgentForm
-3. Handle result and errors
-
-Responses:
-- Success: Text "success" (HTTP 200)
-- Error: Error message text (HTTP 500)
-
----
-
-### 9. Delete Knowledge File
-
-| Param | Value |
-|------|-------|
-| URL | `/agents/delete-knowledge-file?uuid={agent_uuid}&file_uuid={file_uuid}` |
-| Method | DELETE |
-| Description | Delete a file from the agent's knowledge base |
-
-URL Parameters:
-- `uuid` (string) — agent UUID
-- `file_uuid` (string) — file UUID to delete
-
-Business logic:
-1. Enforce DELETE method
-2. Pass `file_uuid` to knowledge_file field
-3. Call `deleteKnowledgeFile()`
-
-Responses:
-
-Success:
-```json
-{
-  "success": true
-}
+**Delete Operation Flow:**
+```php
+$model = new SaveAgentForm();
+$model->scenario = SaveAgentForm::SCENARIO_DELETE;
+$model->uuid = $this->request->get('uuid');
+$isDeleted = $model->delete();
 ```
 
-Error:
-```json
-{
-  "success": false,
-  "errors": {
-    "field": ["error message"]
-  }
-}
-```
-
-Invalid Method:
-```json
-{
-  "success": false
-}
-```
+**Responses:**
+- **Success:** Redirect to `/agents/index` with success notification
+- **Error:** Redirect to referrer with error notification
+- **Not Found:** Error if agent doesn't exist or no access
 
 ---
 
-### 10. Create Phone Number
+### 8. Delete Knowledge - Knowledge Item Deletion
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/create-phone-number` |
-| Method | POST |
-| Description | Add a phone number to an agent |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/delete-knowledge?uuid={agent_uuid}&knowledge_uuid={knowledge_uuid}` |
+| **Method** | POST |
+| **Description** | Delete specific knowledge item from agent |
 
-Input (CreatePhoneNumberForm bodyParams):
-- See CreatePhoneNumberForm for fields
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
+- `knowledge_uuid` (string) - Knowledge item UUID for deletion
 
-Response:
-- Format: JSON array with the operation result
+**Business Logic:**
+1. Validate agent and knowledge UUIDs
+2. Check permissions for knowledge deletion
+3. Delete knowledge item
+4. Update agent knowledge index if needed
 
----
-
-### 11. Delete Phone Number
-
-| Param | Value |
-|------|-------|
-| URL | `/agents/delete-phone-number` |
-| Method | POST |
-| Description | Delete an agent's phone number |
-
-Input (DeletePhoneNumberForm bodyParams):
-- See DeletePhoneNumberForm for fields
-
-Response:
-- Format: JSON array with the operation result
+**Responses:**
+- **Success:** Redirect to agent profile knowledge tab
+- **Error:** Redirect with error notification
 
 ---
 
-### 12. Run Test — Execute Agent Test
+### 9. Attach Phone Number - Phone Number Assignment
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/run-test` |
-| Method | POST |
-| Description | Run agent functionality tests |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/attach-phone-number?uuid={agent_uuid}` |
+| **Method** | POST |
+| **Description** | Attach phone number to agent |
 
-Input (CreateTestForm bodyParams):
-- See CreateTestForm for fields
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
 
-Response:
-- Format: JSON array with test results
+**Input Data:**
+- Phone number selection parameters
+- Assignment configuration data
+
+**Business Logic:**
+1. Validate agent UUID and phone number availability
+2. Create association between agent and phone number
+3. Update agent phone number configuration
+4. Show notification about assignment result
+
+**Responses:**
+- **Success:** Redirect to agent profile with success notification
+- **Error:** Redirect with error notification
 
 ---
 
-### 13. Numbers List
+### 10. Detach Phone Number - Phone Number Removal
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/numbers-list` |
-| Method | GET |
-| Description | Get available phone numbers list |
+| Parameter | Value |
+|-----------|-------|
+| **URL** | `/agents/detach-phone-number?uuid={agent_uuid}&phone_uuid={phone_uuid}` |
+| **Method** | POST |
+| **Description** | Remove phone number from agent |
 
-Response:
-- Format: JSON array of available numbers
+**URL Parameters:**
+- `uuid` (string) - Agent UUID
+- `phone_uuid` (string) - Phone number UUID to detach
+
+**Business Logic:**
+1. Validate agent and phone number UUIDs
+2. Remove association between agent and phone number
+3. Update agent configuration
+4. Show notification about removal result
+
+**Responses:**
+- **Success:** Redirect to agent profile with success notification
+- **Error:** Redirect with error notification
 
 ---
 
 ## Form Classes
 
-### SaveAgentForm
+### 1. SaveAgentForm
 
-File: `src/apps/admin/forms/agent/SaveAgentForm.php`  
-Extends: `yii\\base\\Model`
+**Purpose:** Main form for agent CRUD operations
 
-Scenarios:
-- `SCENARIO_CREATE` — create a new agent
-- `SCENARIO_GENERAL` — general info
-- `SCENARIO_DETAILS` — agent details
-- `SCENARIO_DESCRIPTION` — description
-- `SCENARIO_PROMPTS` — AI prompts
-- `SCENARIO_GREETING` — greeting
-- `SCENARIO_PRESET` — presets
-- `SCENARIO_DYNAMIC_PARAMS` — dynamic parameters
-- `SCENARIO_KNOWLEDGE_TEXT` — text knowledge
+**Scenarios:**
+- `SCENARIO_CREATE` - create new agent
+- `SCENARIO_UPDATE` - edit existing agent
+- `SCENARIO_DELETE` - delete agent
+- `SCENARIO_POPULATE` - load existing agent data
 
-File Upload Fields:
-- `avatar` — agent avatar (UploadedFile)
-- `knowledge_file` — knowledge files (UploadedFile)
+**Key Methods:**
+- `populate()` - load existing agent data for editing
+- `create()` - create new agent with all associated data
+- `update()` - update existing agent
+- `delete()` - delete agent and cleanup associated data
 
-Key methods:
-- `create()` — create a new agent
-- `populate()` — load existing data
-- `saveGeneral()` — save general info
-- `saveDetails()` — save details
-- `saveDescription()` — save description
-- `savePrompt()` — save prompts
-- `saveGreeting()` — save greeting
-- `savePreset()` — save presets
-- `saveDynamicParam()` — save dynamic params
-- `saveKnowledgeText()` — save text knowledge
-- `delete()` — delete agent
-- `uploadKnowledgeFile()` — upload knowledge file
-- `deleteKnowledgeFile()` — delete knowledge file
-
-## Endpoints
-
-### 1. Index — Agents List
-
-| Param | Value |
-|------|-------|
-| URL | `/agents/index` |
-| Method | GET |
-| Description | Display all AI agents of the company with search |
-
-Input:
-- Query parameters for search (via AgentsSearch)
-
-Business logic:
-1. Create AgentsSearch model
-2. Load search parameters from query string
-3. Execute search and build DataProvider
-
-Response:
-- Success: HTML view with agents list and search form
-- Data: `pageName`, `dataProvider`, `searchModel`
+**Features:**
+- Avatar file upload handling
+- Multi-tab configuration support
+- Validation for different scenarios
+- Integration with knowledge management
+- Phone number assignment support
 
 ---
 
-### 2. Save Call Widget Settings
+### 2. CopyAgentForm
 
-| Param | Value |
-|------|-------|
-| URL | `/agents/save-call-widget-settings?uuid={agent_uuid}` |
-| Method | POST |
-| Description | Save call widget settings for an agent |
+**Purpose:** Handle agent copying functionality
 
-URL Parameters:
-- `uuid` (string) — agent UUID
+**Features:**
+- Deep copy of agent configuration
+- Knowledge base duplication
+- Widget settings copying
+- Phone number handling for copied agents
 
-Input (SaveCallWidgetForm bodyParams):
-- See SaveCallWidgetForm for fields
-
-Business logic:
-1. Instantiate SaveCallWidgetForm with agent UUID
-2. Load data from bodyParams
-3. Save widget settings
-4. Show notification
-
-Responses:
-- Success: Redirect to `/agents/profile?uuid={uuid}&showTab=embed-tab&showSubTab=call-widget`
-- Error: Redirect with error notification
+**Key Methods:**
+- `copy()` - perform complete agent duplication
 
 ---
+
+### 3. SaveCallWidgetForm
+
+**Purpose:** Manage call widget settings for agents
+
+**Features:**
+- Call widget appearance configuration
+- Integration settings
+- Display options
+- Functionality parameters
+
+---
+
+### 4. SaveChatWidgetForm
+
+**Purpose:** Manage chat widget settings for agents
+
+**Features:**
+- Chat widget appearance configuration
+- Integration settings
+- Display options
+- Functionality parameters
+
+---
+
+### 5. AgentsSearch
+
+**Purpose:** Handle agent search and filtering
+
+**Features:**
+- Text search across agent names and descriptions
+- Status filtering
+- Company-based isolation
+- Pagination support
+- Sorting options
+
+---
+
+## Security Features
+
+### 1. Company-based Access Control
+- All operations isolated by selectedUserCompany
+- Agent access limited to company scope
+- Knowledge management within company boundaries
+- Phone number assignments restricted to company resources
+
+### 2. UUID Validation
+- UuidHelper validation for all UUID parameters
+- Existence checking for agents, knowledge, and phone numbers
+- Secure parameter handling
+
+### 3. File Upload Security
+- Avatar upload validation
+- File type restrictions
+- Size limitations
+- Secure file storage
+
+### 4. Knowledge Management Security
+- Access control for knowledge items
+- Validation of knowledge ownership
+- Secure knowledge deletion
+
+---
+
+## Integration Points
+
+### Dependencies
+- `AgentsAdvanced` - main agents model
+- `AgentKnowledgeAdvanced` - knowledge management model
+- `CompanyPhoneNumbersAdvanced` - phone number integration
+- `UuidHelper` - UUID validation and generation
+- Various widget configuration models
+
+### Related Functionality
+- Integration with knowledge base system
+- Phone number management integration
+- Widget embedding system
+- File upload and storage system
+
+### External Integrations
+- AI/ML model integration for agent functionality
+- Communication provider integrations
+- Analytics and tracking systems
+
+---
+
+## Usage Examples
+
+### Create new agent
+```http
+POST /agents/create
+Content-Type: multipart/form-data
+
+SaveAgentForm[name]=Customer Support Agent&SaveAgentForm[description]=AI agent for customer support&avatar=@avatar.jpg
+```
+
+### Update agent profile
+```http
+POST /agents/profile?uuid=550e8400-e29b-41d4-a716-446655440000
+Content-Type: application/x-www-form-urlencoded
+
+SaveAgentForm[name]=Updated Agent Name&SaveAgentForm[description]=Updated description
+```
+
+### Copy existing agent
+```http
+GET /agents/copy?uuid=550e8400-e29b-41d4-a716-446655440000
+```
+
+### Configure call widget
+```http
+POST /agents/save-call-widget-settings?uuid=550e8400-e29b-41d4-a716-446655440000
+Content-Type: application/x-www-form-urlencoded
+
+SaveCallWidgetForm[enabled]=1&SaveCallWidgetForm[theme]=modern&SaveCallWidgetForm[position]=bottom-right
+```
+
+### Attach phone number
+```http
+POST /agents/attach-phone-number?uuid=550e8400-e29b-41d4-a716-446655440000
+Content-Type: application/x-www-form-urlencoded
+
+phone_uuid=550e8400-e29b-41d4-a716-446655440001
+```
+
+---
+
+## Error Handling
+
+### Common Errors
+- **"Agent not found"** - Invalid agent UUID or access denied
+- **"Knowledge not found"** - Invalid knowledge UUID or access denied
+- **"Phone number not available"** - Phone number already assigned or not accessible
+- **Avatar upload failures** - File validation or storage errors
+
+### File Upload Errors
+- Invalid file format for avatar
+- File size exceeds limits
+- Storage system errors
+- Permission issues
+
+### Knowledge Management Errors
+- Knowledge item conflicts
+- Invalid knowledge format
+- Access permission errors
+- Storage limitations
+
+### Widget Configuration Errors
+- Invalid widget parameters
+- Integration configuration failures
+- Display setting conflicts
+
+### HTTP Status Codes
+- **200** - Success responses
+- **404** - Agent, knowledge, or phone number not found
+- **400** - Invalid input parameters or validation failures
+- **500** - System errors with user-friendly messages
+- **Redirect** - Success operations redirect to appropriate pages
+
+---
+
+*AgentsController is a comprehensive system for managing AI agents with advanced features including knowledge management, widget configuration, phone number integration, and multi-tab profile management capabilities.*
